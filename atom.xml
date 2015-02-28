@@ -4,7 +4,7 @@
   <title><![CDATA[Jean-Luc Dagon]]></title>
   <link href="http://blog.jldagon.me/atom.xml" rel="self"/>
   <link href="http://blog.jldagon.me/"/>
-  <updated>2015-02-28T15:22:43+01:00</updated>
+  <updated>2015-02-28T23:57:29+01:00</updated>
   <id>http://blog.jldagon.me/</id>
   <author>
     <name><![CDATA[Jean-Luc Dagon]]></name>
@@ -12,6 +12,195 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Hacking the default Facebook UIActivity]]></title>
+    <link href="http://blog.jldagon.me/blog/2015/02/28/hacking-the-default-facebook-uiactivity/"/>
+    <updated>2015-02-28T18:38:13+01:00</updated>
+    <id>http://blog.jldagon.me/blog/2015/02/28/hacking-the-default-facebook-uiactivity</id>
+    <content type="html"><![CDATA[<h2>Introduction</h2>
+
+<p><code>UIActivity</code> has been introduced in iOS 6.0 and one of its purposes was making social sharing easier.</p>
+
+<p>In most cases, you wouldn&rsquo;t need the <code>TWTweetComposeViewController</code> or <code>SLComposeViewController</code> anymore to send a tweet or post a status on Facebook (or integrating the Facebook SDK).</p>
+
+<p>Instead, you would just create a <code>UIActivityViewController</code>, passing it some content to share (image, url and/or text) and you are presented with the standard system share picker, with every available option.</p>
+
+<p>4 lines of code, no external SDK.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="bp">NSArray</span> <span class="o">*</span><span class="n">activityItems</span> <span class="o">=</span> <span class="l">@[</span><span class="s">@&quot;Awesome blog!&quot;</span><span class="p">,</span>
+</span><span class='line'>                           <span class="p">[</span><span class="bp">NSURL</span> <span class="nl">URLWithString</span><span class="p">:</span><span class="s">@&quot;http://blog.jldagon.me&quot;</span><span class="p">]</span><span class="l">]</span><span class="p">;</span>
+</span><span class='line'><span class="bp">UIActivityViewController</span> <span class="o">*</span><span class="n">activityVC</span> <span class="o">=</span> <span class="p">[[</span><span class="bp">UIActivityViewController</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithActivityItems</span><span class="p">:</span><span class="n">activityItems</span>
+</span><span class='line'>                                                                                         <span class="nl">applicationActivities</span><span class="p">:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class='line'><span class="p">[</span><span class="nb">self</span> <span class="nl">presentViewController</span><span class="p">:</span><span class="n">activityVC</span> <span class="nl">animated</span><span class="p">:</span><span class="nb">YES</span> <span class="nl">completion</span><span class="p">:</span><span class="nb">nil</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<div style="text-align:center; margin:10px auto;">
+<img src="http://blog.jldagon.me/images/fb-uiactivity-standard-share-picker.png" width="320" height="569"> 
+</div>
+
+
+<p>Now, if you choose to share this content on Facebook, the standard share sheet is presented. You don&rsquo;t need the Facebook SDK with a Facebook app id, you don&rsquo;t need to have FB login.</p>
+
+<div style="text-align:center; display: inline-block; height: 100%; vertical-align: middle; margin:10px auto;">
+<img src="http://blog.jldagon.me/images/fb-uiactivity-fb-standard-share.png" width="320" height="536" style="vertical-align: middle;" />
+<img align="middle" src="http://blog.jldagon.me/images/fb-uiactivity-screenshot-facebook-standard-sheet.png" width="315" height="327" style="vertical-align: middle;" />
+</div>
+
+
+<p>And voilà. The text and URL have been shared on your Facebook profile!</p>
+
+<p>But—there&rsquo;s always a but—…</p>
+
+<h3><strong>What if you would like the publication to be attributed to your Facebook app?</strong></h3>
+
+<p>All contents shared with a <code>UIActivityViewController</code> are attributed to <em>iOS</em>. You can see it highlighted in the above screenshot.<br/>
+That means no metrics, no measure of engagement through Facebook insights…</p>
+
+<p>Facebook itself <a href="https://developers.facebook.com/docs/ios/share#iossharesheet">lists</a> the disadvantages of using this standard component:</p>
+
+<blockquote><ul>
+<li>Share sheet does not support the complete platform attachment model</li>
+<li>Can only be used if people using your app log in to Facebook via iOS 6</li>
+<li>Does not support tagging friends</li>
+<li>Posts from the share sheet are attributed to iOS</li>
+</ul>
+</blockquote>
+
+<p>Point #2 can be problematic too.</p>
+
+<h3><strong>What if the users have the Facebook app installed, but they haven&rsquo;t linked their FB account in the iOS settings?</strong></h3>
+
+<p>Facebook does not even appear as an option to share the content. Bummer.</p>
+
+<h1>Solving the problem</h1>
+
+<p>To fix these issues, you could roll you own social sharing component, handling Twitter, iMessage, Mail, Facebook and whatever other destination you wish. And it&rsquo;s a great idea, especially if you want to customize the UI and have a complete control over the entire sharing process.</p>
+
+<p>Or, if you&rsquo;re willing to resort to some hackery, you could modify the behavior of the default Facebook <code>UIActivity</code>.</p>
+
+<p>Disclaimer: <strong>That&rsquo;s probably a bad idea</strong>, and could lead to rejections from the review team. I wouldn&rsquo;t risk it for a contract work for example.</p>
+
+<p>Is it be possible to use the <strong>Share Dialog</strong> of the Facebook app when we press the Facebook button?</p>
+
+<p>Well, yes!</p>
+
+<p>All we need is to find a way to intercept the tap on the Facebook button and replace the standard behavior by our custom code.</p>
+
+<p>Each item presented by the <code>UIActivityViewController</code> is tied to a <code><a href="https://developer.apple.com/library/prerelease/ios/documentation/UIKit/Reference/UIActivity_Class/index.html">UIActivity</a></code> object, describing what types of items it can share and how it can share them:</p>
+
+<p>(from Apple documentation)</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="p">-</span> <span class="p">(</span><span class="bp">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">activityType</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>A string that identifies the provided service to your app.</p></blockquote>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="p">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">canPerformWithActivityItems:</span><span class="p">(</span><span class="bp">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="nv">activityItems</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><blockquote><p>Returns a Boolean indicating whether the service can act on the specified data items.</p></blockquote></li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">prepareWithActivityItems:</span><span class="p">(</span><span class="bp">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="nv">activityItems</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>Prepares your service to act on the specified data.</p></blockquote>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">performActivity</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>Performs the service when no custom view controller is provided.</p></blockquote>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">activityDidFinish:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">completed</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>Notifies the system that your activity object has completed its work.</p></blockquote>
+
+<p>We need to:</p>
+
+<ol>
+<li>identify the Facebook activity&rsquo;s <code>activityType</code></li>
+<li>somehow override <code>canPerformWithActivityItems:</code> to make it return <code>YES</code> when there&rsquo;s no Facebook account linked in the iOS settings, but the Facebook app is installed</li>
+<li>plug ourselves into <code>-prepareWithActivityItems:</code> and prepare the data we&rsquo;re going to feed the Facebook app with</li>
+<li>launch the share dialog in <code>-performActivity</code></li>
+<li>call <code>-activityDidFinish:</code> when the content has been shared</li>
+</ol>
+
+
+<p>I initially tried to swizzle <code>-prepareWithActivityItems:</code> on <code>UIActivity</code> to see what was going on and get the activity type.</p>
+
+<p>Except that it wasn&rsquo;t being called at all.
+I realized that it was because everything happens in a subclass of <code>UIActivity</code>. A private subclass.</p>
+
+<p>So in order to do all the swizzling, I had to find what subclass was used. Digging through the UIKit runtime headers, I finally hit <code>UISocialActivity</code> (<a href="https://github.com/JaviSoto/iOS8-Runtime-Headers/blob/master/Frameworks/UIKit.framework/UISocialActivity.h">header here</a>).</p>
+
+<ol>
+<li><p>This time it worked, methods were being called. Facebook&rsquo;s <code>activityType</code> is <code>com.apple.UIKit.activity.PostToFacebook</code>.</p></li>
+<li><p>Enabling Facebook activity with no FB account set up</p></li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="p">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">cca_canPerformWithActivityItems:</span><span class="p">(</span><span class="bp">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="nv">activityItems</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="cm">/* we&#39;re in the Facebook activity and the Facebook app is here */</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="nb">YES</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="c1">// Other activities or no Facebook app</span>
+</span><span class='line'>    <span class="k">return</span> <span class="p">[</span><span class="nb">self</span> <span class="nl">cca_canPerformWithActivityItems</span><span class="p">:</span><span class="n">activityItems</span><span class="p">];</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li><p>In the swizzled <code>-prepareWithActivityItems:</code>, we&rsquo;re retrieving the URL (if any), image(s) and text passed as activity items. Then we store a <code>FBLinkShareParams</code> or <code>FBPhotosParam</code> depending on what data is shared.</p></li>
+<li><p>Displaying the app through Facebook&rsquo;s <code>FBDialogs</code> with the <code>*Params</code> object we created in step 3.</p></li>
+<li><p>When the Facebook app returns to our app, it calls the share completion handler in which we&rsquo;re calling <code>activityDidFinish:</code>.</p></li>
+</ol>
+
+
+<p>And there we are with a correctly—attributed publication:</p>
+
+<div style="text-align:center; margin:10px auto;">
+<img src="http://blog.jldagon.me/images/fb-uiactivity-screenshot-facebook-hack.png" width="520" height="496"> 
+</div>
+
+
+<p>This solution requires the <strong>Facebook SDK</strong>, so you must have a well-configured Facebook app, indicate the <code>FacebookAppID</code> and <code>FacebookDisplayName</code> in your Info.plist as well as the <code>fb{app id}</code> url scheme.</p>
+
+<p>The code is available on GitHub: <a href="https://github.com/jilouc/CCAFacebookAppActivity">CCAFacebookAppActivity</a></p>
+
+<p>– I&rsquo;m <a href="https://twitter.com/jilouc">@Jilouc</a> on Twitter if you have any comment.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Auto-Layout and UITableView cells]]></title>
