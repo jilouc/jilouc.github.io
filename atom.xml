@@ -4,7 +4,7 @@
   <title><![CDATA[Jean-Luc Dagon]]></title>
   <link href="http://blog.jldagon.me/atom.xml" rel="self"/>
   <link href="http://blog.jldagon.me/"/>
-  <updated>2015-02-28T23:57:29+01:00</updated>
+  <updated>2015-03-01T00:07:49+01:00</updated>
   <id>http://blog.jldagon.me/</id>
   <author>
     <name><![CDATA[Jean-Luc Dagon]]></name>
@@ -111,10 +111,9 @@ That means no metrics, no measure of engagement through Facebook insights…</p>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<ul>
-<li><blockquote><p>Returns a Boolean indicating whether the service can act on the specified data items.</p></blockquote></li>
-</ul>
+<p></p>
 
+<blockquote><p>Returns a Boolean indicating whether the service can act on the specified data items.</p></blockquote>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">prepareWithActivityItems:</span><span class="p">(</span><span class="bp">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="nv">activityItems</span>
