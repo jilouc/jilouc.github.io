@@ -1,0 +1,761 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>UIScrollCeption: embedding multiple UIWebViews in a UITableView - Jean-Luc Dagon</title>
+  <meta name="author" content="Jean-Luc Dagon">
+
+  
+  <meta name="description" content="You don&rsquo;t have that much choice to display HTML content with basic UIKit components. You&rsquo;re basically limited to UIWebView and… nothing &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://jilouc.github.io/blog/2012/08/13/uiscrollception-embedding-multiple-uiwebviews-in-a-uitableview">
+  <link href="/favicon.ico" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Jean-Luc Dagon" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href='//fonts.googleapis.com/css?family=Sintony' rel='stylesheet' type='text/css'>
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
+  
+
+</head>
+
+<body    class="collapse-sidebar sidebar-footer" >
+  <nav role="navigation">
+
+<ul class="main-navigation">
+  <li><a href="/"><strong>Jean-Luc Dagon</strong></a></li>
+  <li><a href="/">Home</a></li>
+  <li><a href="/archives">Archives</a></li>
+  <li><a href="https://github.com/jilouc">Projects</a></li>
+  <li><a href="http://cocoapps.fr">Cocoapps</a></li>
+</ul>
+
+</nav>
+  
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">UIScrollCeption: embedding multiple UIWebViews in a UITableView</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-08-13T11:27:00+02:00" pubdate data-updated="true"></time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>You don&rsquo;t have that much choice to display HTML content with basic <code>UIKit</code> components. You&rsquo;re basically limited to <code>UIWebView</code> and… nothing else.</p>
+
+<p>It&rsquo;s a mini Safari, so it does the job very well. But there&rsquo;s WebKit under the hood so it&rsquo;s quite heavy: it has a significant memory trace and takes a while to load.</p>
+
+<p>At this point, you need to think about what the HTML looks like. There are some great open-source components out there to display rich-text:</p>
+
+<ul>
+<li><a href="https://github.com/Cocoanetics/DTCoreText">DTCoreText</a> can create attributed strings from HTML and takes care of the rendering. It supports rich text, images, videos, transforms and much more. Really great.</li>
+<li><a href="https://github.com/AliSoftware/OHAttributedLabel/">OHAttributedLabel</a> or <a href="https://github.com/mattt/TTTAttributedLabel/">TTTAttributedLabel</a> both support basic formatting stuff.</li>
+</ul>
+
+
+<p>If you generate the HTML content yourself and have a complete control over it and if it matches the features of one of these components, go ahead and use it.<br/>
+However, if you have arbitrary HTML, maybe including some pieces of Javascript, advanced styling: you&rsquo;re stuck with <code>UIWebView</code>.</p>
+
+<!-- more -->
+
+
+<p>And now&hellip;</p>
+
+<h2>What if you want to display a list of arbitrary html-based content?</h2>
+
+<blockquote><p>UITABLEVIEW ALL THE THINGS</p></blockquote>
+
+<p>iOS developers have grown a conditioned reflex. When they hear “list”, they think <code>UITableView</code>. And this is good, because it has everything we need:</p>
+
+<ul>
+<li>Native scroll for free</li>
+<li>Memory-efficient cells thanks to the reuse pattern</li>
+</ul>
+
+
+<p>Thanks to the reuse of table cells, we can have a limited number of concurrent <code>UIWebView</code>. They&rsquo;re heavy, but having 3, 4 or 5 of them won&rsquo;t kill the app.</p>
+
+<p>You&rsquo;re now in the process of writing a custom <code>UITableViewCell</code> embedding a web view, returning it from <code>tableView:cellForRowAtIndexPath:</code>. Nice. The next logical step is <code>tableView:heighForRowAtIndexPath:</code></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="k">return</span> <span class="mf">42.f</span><span class="p">;</span> <span class="c1">// Errrr</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here comes the problem. <strong>The table view needs to know the height of all the cells when updating its content</strong>.</p>
+
+<ul>
+<li>How to compute the content height in a <code>UIWebView</code>?</li>
+<li>How to update the table view accordingly?</li>
+</ul>
+
+
+<p>All further Objective-C code:</p>
+
+<ul>
+<li>is targeted at iOS 5 and later</li>
+<li>is using ARC</li>
+<li>is using new llvm features. No need to type <code>@synthesize …</code> anymore.</li>
+</ul>
+
+
+<h2>Computing the cell&rsquo;s height</h2>
+
+<p>Let&rsquo;s say you want to display the answers to this question on Stack Overflow: <a href="http://stackoverflow.com/questions/494562/setting-custom-uitableviewcells-height">Setting custom UITableViewCells height</a>.</p>
+
+<p>The HTML code for an answer looks like (got through <a href="http://api.stackexchange.com/2.0/questions/494562/answers?order=desc&amp;sort=votes&amp;site=stackoverflow&amp;filter=pDZdlp">this API call</a>)</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;p&gt;</span>Your <span class="nt">&lt;code&gt;</span>UITableViewDelegate<span class="nt">&lt;/code&gt;</span> should implement <span class="nt">&lt;code&gt;</span>tableView:heightForRowAtIndexPath:<span class="nt">&lt;/code&gt;&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;pre&gt;&lt;code&gt;</span>- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+</span><span class='line'>{
+</span><span class='line'>    return [indexPath row] * 20;
+</span><span class='line'>}
+</span><span class='line'><span class="nt">&lt;/code&gt;&lt;/pre&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;p&gt;</span>You will probably want to use <span class="nt">&lt;code&gt;</span>NSString<span class="nt">&lt;/code&gt;</span>&#39;s <span class="nt">&lt;code&gt;</span>sizeWithFont:constrainedToSize:lineBreakMode:<span class="nt">&lt;/code&gt;</span> method to calculate your row height rather than just performing some silly math on the indexPath :)<span class="nt">&lt;/p&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Content model</h3>
+
+<p>Nothing too complex here. We&rsquo;re representing an answer by an instance of <code>MyContent</code>, holding the answer id and its body.</p>
+
+<figure class='code'><figcaption><span>MyContent.h</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="cp">#import &lt;Foundation/Foundation.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@interface</span> <span class="nc">MyContent</span> : <span class="bp">NSObject</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@property</span> <span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span> <span class="k">assign</span><span class="p">)</span> <span class="bp">NSInteger</span> <span class="n">identifier</span><span class="p">;</span> <span class="c1">// answer identifier</span>
+</span><span class='line'><span class="k">@property</span> <span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span> <span class="k">strong</span><span class="p">)</span> <span class="bp">NSString</span> <span class="o">*</span><span class="n">body</span><span class="p">;</span> <span class="c1">// HTML content</span>
+</span><span class='line'><span class="k">@property</span> <span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span> <span class="k">assign</span><span class="p">)</span> <span class="n">CGFloat</span> <span class="n">cellHeight</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>The HTML page template</h3>
+
+<p>We&rsquo;re going to wrap the content inside a custom template, designed to compute the height of the document.</p>
+
+<figure class='code'><figcaption><span>content_template.html</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="cp">&lt;!DOCTYPE HTML&gt;</span>
+</span><span class='line'><span class="nt">&lt;html&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;head&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;meta</span> <span class="na">name =</span><span class="err"> </span><span class="s">&quot;viewport&quot;</span> <span class="na">content =</span><span class="err"> </span><span class="s">&quot;width=device-width, initial-scale=1.0, maximum-scale=5.0&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span> <span class="na">src=</span><span class="s">&quot;jquery-1.7.2.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/head&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;body&gt;</span>[[
+</span><span class='line'>      
+</span><span class='line'>      [[content_body]]
+</span><span class='line'>      
+</span><span class='line'>      <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>      
+</span><span class='line'>        <span class="nx">$</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>              
+</span><span class='line'>            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">[[</span><span class="nx">should_monitor_size</span><span class="p">]])</span> <span class="p">{</span>
+</span><span class='line'>              <span class="k">return</span><span class="p">;</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>      
+</span><span class='line'>            <span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">resize</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>                <span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">href</span> <span class="o">=</span> <span class="s2">&quot;ready://content/[[content_id]]/&quot;</span> <span class="o">+</span> <span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">outerHeight</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+</span><span class='line'>            <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">href</span> <span class="o">=</span> <span class="s2">&quot;ready://content/[[content_id]]/&quot;</span> <span class="o">+</span> <span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">outerHeight</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>      <span class="nt">&lt;/script&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/body&gt;</span>
+</span><span class='line'><span class="nt">&lt;/html&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The important bits are in the <code>&lt;script&gt;</code> tag, between lines 13 and 21. These few lines of Javascript<a name="sref1" href="#ref1">^1</a> allows you to be notified when the document has been loaded or resized. By setting the <code>window.location.href</code> property to a custom URL, it triggers the <code>webView:shouldStartLoadRequest:navigationType:</code> delegate call.</p>
+
+<p>The templated elements are:</p>
+
+<ul>
+<li><code>[[content_body]]</code>: will be replaced by the answser&rsquo;s body</li>
+<li><code>[[content_id]]</code>: will be replaced by the answer id</li>
+<li><code>[[should_monitor_size]]</code>: will be <code>true</code> if the height has already been computed, <code>false</code> if you already have the height cached somewhere and don&rsquo;t need recomputation.</li>
+</ul>
+
+
+<h3>Table view delegate</h3>
+
+<p><code>tableView:cellForRowAtIndexPath:</code> returns a reusable cell if available.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="p">-</span> <span class="p">(</span><span class="bp">UITableViewCell</span> <span class="o">*</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="bp">UITableView</span> <span class="o">*</span><span class="p">)</span><span class="nv">tableView</span> <span class="nf">cellForRowAtIndexPath:</span><span class="p">(</span><span class="bp">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">MyContent</span> <span class="o">*</span><span class="n">content</span> <span class="o">=</span> <span class="p">[</span><span class="nb">self</span> <span class="nl">_contentForIndexPath</span><span class="p">:</span><span class="n">indexPath</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">static</span> <span class="bp">NSString</span> <span class="o">*</span><span class="n">cellId</span> <span class="o">=</span> <span class="s">@&quot;ContentCell&quot;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">MyCustomTableViewCell</span> <span class="o">*</span><span class="n">cell</span> <span class="o">=</span> <span class="p">(</span><span class="n">MyCustomTableViewCell</span> <span class="o">*</span><span class="p">)[</span><span class="n">tableView</span> <span class="nl">dequeueReusableCellWithIdentifier</span><span class="p">:</span><span class="n">cellId</span><span class="p">];</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">cell</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="n">cell</span> <span class="o">=</span> <span class="p">[[</span><span class="bp">UITableViewCell</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithStyle</span><span class="p">:</span><span class="n">UITableViewCellStyleDefault</span>
+</span><span class='line'>                                    <span class="nl">reuseIdentifier</span><span class="p">:</span><span class="n">cellId</span><span class="p">];</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="p">[</span><span class="n">cell</span> <span class="nl">updateWithContent</span><span class="p">:</span><span class="n">content</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">cell</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The <code>tableView:heightForRowAtIndexPath:</code> returns the computed height if available. I chose <code>0</code> as default value until the height is computed.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="p">-</span> <span class="p">(</span><span class="n">CGFloat</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="bp">UITableView</span> <span class="o">*</span><span class="p">)</span><span class="nv">tableView</span> <span class="nf">heightForRowAtIndexPath:</span><span class="p">(</span><span class="bp">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">MyContent</span> <span class="o">*</span><span class="n">content</span> <span class="o">=</span> <span class="p">[</span><span class="nb">self</span> <span class="nl">_contentForIndexPath</span><span class="p">:</span><span class="n">indexPath</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">content</span><span class="p">.</span><span class="n">cellHeight</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">post</span><span class="p">.</span><span class="n">cellHeight</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">return</span> <span class="mf">0.f</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now let&rsquo;s put everything up together in a custom cell.</p>
+
+<h3>Custom UITableViewCell setup</h3>
+
+<p>Create a subclass of UITableViewCell. It will of course contain a <code>UIWebView</code>. The cell is the webview&rsquo;s delegate.</p>
+
+<figure class='code'><figcaption><span>MyWebTableViewCell.h</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="cp">#import &lt;UIKit/UIKit.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@class</span> <span class="nc">MyContent</span>;
+</span><span class='line'>
+</span><span class='line'><span class="k">@interface</span> <span class="nc">MyWebTableViewCell</span> : <span class="bp">UITableViewCell</span> <span class="o">&lt;</span><span class="bp">UIWebViewDelegate</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@property</span> <span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span> <span class="k">strong</span><span class="p">)</span> <span class="bp">UIWebView</span> <span class="o">*</span><span class="n">webView</span><span class="p">;</span>
+</span><span class='line'><span class="k">@property</span> <span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span> <span class="k">strong</span><span class="p">)</span> <span class="n">MyContent</span> <span class="o">*</span><span class="n">content</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">updateContent:</span><span class="p">(</span><span class="n">MyContent</span> <span class="o">*</span><span class="p">)</span><span class="nv">content</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>MyWebTableViewCell.m</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="cp">#import &quot;MyWebTableViewCell.h&quot;</span>
+</span><span class='line'><span class="cp">#import &quot;MyContent.h&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@implementation</span> <span class="nc">MyWebTableViewCell</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">initWithStyle:</span><span class="p">(</span><span class="n">UITableViewCellStyle</span><span class="p">)</span><span class="nv">cellStyle</span>
+</span><span class='line'>    <span class="nf">reuseIdentifier:</span><span class="p">(</span><span class="bp">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">reuseIdentifier</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="nb">self</span> <span class="o">=</span> <span class="p">[</span><span class="nb">super</span> <span class="nl">initWithStyle</span><span class="p">:</span><span class="n">cellStyle</span>
+</span><span class='line'>                <span class="nl">reuseIdentifier</span><span class="p">:</span><span class="n">reuseIdentifier</span><span class="p">];</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nb">self</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nb">self</span><span class="p">.</span><span class="n">webView</span> <span class="o">=</span> <span class="p">[[</span><span class="bp">UIWebView</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithFrame</span><span class="p">:</span><span class="nb">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">];</span>
+</span><span class='line'>        <span class="p">[</span><span class="n">_webView</span> <span class="nl">setDelegate</span><span class="p">:</span><span class="nb">self</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// It&#39;s important that the webview doesn&#39;t autoresize when its parent&#39;s frame changes.</span>
+</span><span class='line'>        <span class="p">[</span><span class="n">_webView</span> <span class="nl">setAutoresizingMask</span><span class="p">:</span><span class="n">UIViewAutoresizingNone</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="p">[</span><span class="n">_webView</span><span class="p">.</span><span class="n">scrollView</span> <span class="nl">setScrollEnabled</span><span class="p">:</span><span class="nb">NO</span><span class="p">];</span> <span class="c1">// Prevents scrolling in the webview.</span>
+</span><span class='line'>        <span class="p">[</span><span class="n">_webView</span><span class="p">.</span><span class="n">scrollView</span> <span class="nl">setScrollsToTop</span><span class="p">:</span><span class="nb">NO</span><span class="p">];</span> <span class="c1">// Keep the &quot;scroll to top when the status is tapped&quot; behavior.</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="p">[</span><span class="nb">self</span><span class="p">.</span><span class="n">contentView</span> <span class="nl">addSubview</span><span class="p">:</span><span class="n">_webView</span><span class="p">];</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nb">self</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">updateWithContent:</span><span class="p">(</span><span class="n">MyContent</span> <span class="o">*</span><span class="p">)</span><span class="nv">content</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nb">self</span><span class="p">.</span><span class="n">content</span> <span class="o">=</span> <span class="n">content</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="bp">NSString</span> <span class="o">*</span><span class="n">template</span> <span class="o">=</span> <span class="p">[</span><span class="bp">NSString</span> <span class="nl">stringWithContentsOfFile</span><span class="p">:</span><span class="n">RESOURCE</span><span class="p">(</span><span class="s">@&quot;content_template&quot;</span><span class="p">,</span> <span class="s">@&quot;html&quot;</span><span class="p">)</span>
+</span><span class='line'>                                                   <span class="nl">encoding</span><span class="p">:</span><span class="n">NSUTF8StringEncoding</span>
+</span><span class='line'>                                                      <span class="nl">error</span><span class="p">:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">template</span> <span class="o">=</span> <span class="p">[</span><span class="n">template</span> <span class="nl">stringByReplacingOccurrencesOfString</span><span class="p">:</span><span class="s">@&quot;[[should_monitor_size]]&quot;</span>
+</span><span class='line'>                                                   <span class="nl">withString</span><span class="p">:</span><span class="n">content</span><span class="p">.</span><span class="n">cellHeight</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">?</span> <span class="s">@&quot;false&quot;</span> <span class="o">:</span> <span class="s">@&quot;true&quot;</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">template</span> <span class="o">=</span> <span class="p">[</span><span class="n">template</span> <span class="nl">stringByReplacingOccurrencesOfString</span><span class="p">:</span><span class="s">@&quot;[[content_id]]&quot;</span>
+</span><span class='line'>                                                   <span class="nl">withString</span><span class="p">:[</span><span class="bp">NSString</span> <span class="nl">stringWithFormat</span><span class="p">:</span><span class="s">@&quot;%d&quot;</span><span class="p">,</span> <span class="n">content</span><span class="p">.</span><span class="n">identifier</span><span class="p">]];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">template</span> <span class="o">=</span> <span class="p">[</span><span class="n">template</span> <span class="nl">stringByReplacingOccurrencesOfString</span><span class="p">:</span><span class="s">@&quot;[[content_body]]&quot;</span>
+</span><span class='line'>                                                   <span class="nl">withString</span><span class="p">:</span><span class="n">content</span><span class="p">.</span><span class="n">body</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Finally, load the content</span>
+</span><span class='line'>    <span class="p">[</span><span class="nb">self</span><span class="p">.</span><span class="n">webView</span> <span class="nl">loadHTMLString</span><span class="p">:</span><span class="n">template</span>
+</span><span class='line'>                         <span class="nl">baseURL</span><span class="p">:[[</span><span class="bp">NSBundle</span> <span class="n">mainBundle</span><span class="p">]</span> <span class="n">bundleURL</span><span class="p">]];</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">webViewDidStartLoad:</span><span class="p">(</span><span class="bp">UIWebView</span> <span class="o">*</span><span class="p">)</span><span class="nv">webView</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">webView</span><span class="p">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.f</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">webViewDidFinishLoad:</span><span class="p">(</span><span class="bp">UIWebView</span> <span class="o">*</span><span class="p">)</span><span class="nv">webView</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">webView</span><span class="p">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="mf">1.f</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">webView:</span><span class="p">(</span><span class="bp">UIWebView</span> <span class="o">*</span><span class="p">)</span><span class="nv">webView</span> <span class="nf">shouldStartLoadWithRequest:</span><span class="p">(</span><span class="bp">NSURLRequest</span> <span class="o">*</span><span class="p">)</span><span class="nv">request</span> <span class="nf">navigationType:</span><span class="p">(</span><span class="n">UIWebViewNavigationType</span><span class="p">)</span><span class="nv">navigationType</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Serious things here, as explained in details below.</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">layoutSubviews</span> <span class="p">{</span>
+</span><span class='line'>    <span class="p">[</span><span class="nb">super</span> <span class="n">layoutSubviews</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// Manually resize the web view</span>
+</span><span class='line'>    <span class="bp">CGRect</span> <span class="n">r</span> <span class="o">=</span> <span class="nb">self</span><span class="p">.</span><span class="n">webView</span><span class="p">.</span><span class="n">frame</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">r</span><span class="p">.</span><span class="n">origin</span> <span class="o">=</span> <span class="n">CGPointZero</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">r</span><span class="p">.</span><span class="n">size</span> <span class="o">=</span> <span class="nb">self</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">size</span><span class="p">;</span>
+</span><span class='line'>    <span class="nb">self</span><span class="p">.</span><span class="n">webView</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">r</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>As mentioned earlier, every time the document is loaded or resized, it will call the delegate&rsquo;s <code>webView:shouldStartLoadWithRequest:navigationType:</code></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="p">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">webView:</span><span class="p">(</span><span class="bp">UIWebView</span> <span class="o">*</span><span class="p">)</span><span class="nv">webView</span> <span class="nf">shouldStartLoadWithRequest:</span><span class="p">(</span><span class="bp">NSURLRequest</span> <span class="o">*</span><span class="p">)</span><span class="nv">request</span> <span class="nf">navigationType:</span><span class="p">(</span><span class="n">UIWebViewNavigationType</span><span class="p">)</span><span class="nv">navigationType</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="bp">NSURL</span> <span class="o">*</span><span class="n">url</span> <span class="o">=</span> <span class="p">[</span><span class="n">request</span> <span class="n">URL</span><span class="p">];</span>
+</span><span class='line'>    <span class="bp">NSString</span> <span class="o">*</span><span class="n">scheme</span> <span class="o">=</span> <span class="p">[</span><span class="n">url</span> <span class="n">scheme</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">([</span><span class="n">scheme</span> <span class="nl">isEqualToString</span><span class="p">:</span><span class="s">@&quot;ready&quot;</span><span class="p">])</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// URLs look like ready://content/12345/232 </span>
+</span><span class='line'>        <span class="c1">//                     content id --^    ^---- document height</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="bp">NSInteger</span> <span class="n">contentId</span> <span class="o">=</span> <span class="p">[[[</span><span class="n">url</span> <span class="n">pathComponents</span><span class="p">]</span> <span class="nl">objectAtIndex</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span> <span class="n">integerValue</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="nb">self</span><span class="p">.</span><span class="n">content</span><span class="p">.</span><span class="n">identifier</span> <span class="o">!=</span> <span class="n">contentId</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// sanity check</span>
+</span><span class='line'>            <span class="k">return</span> <span class="nb">NO</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="bp">NSInteger</span> <span class="n">height</span> <span class="o">=</span> <span class="p">[[[</span><span class="n">url</span> <span class="n">pathComponents</span><span class="p">]</span> <span class="nl">objectAtIndex</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="n">integerValue</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">height</span> <span class="o">!=</span> <span class="nb">self</span><span class="p">.</span><span class="n">content</span><span class="p">.</span><span class="n">cellHeight</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nb">self</span><span class="p">.</span><span class="n">content</span><span class="p">.</span><span class="n">cellHeight</span> <span class="o">=</span> <span class="n">height</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// Magic. Empty update block will animate the cell to it&#39;s new height!</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="bp">UITableView</span> <span class="o">*</span><span class="n">tv</span> <span class="o">=</span> <span class="p">(</span><span class="bp">UITableView</span> <span class="o">*</span><span class="p">)</span><span class="nb">self</span><span class="p">.</span><span class="n">superview</span><span class="p">;</span>
+</span><span class='line'>            <span class="p">[</span><span class="n">tv</span> <span class="n">beginUpdates</span><span class="p">];</span>
+</span><span class='line'>            <span class="p">[</span><span class="n">tv</span> <span class="n">endUpdates</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">return</span> <span class="nb">NO</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="nb">YES</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Summary</h2>
+
+<ul>
+<li>Create cells with default height</li>
+<li>Load the content in the web view</li>
+<li>Listen to load and resize events using Javascript</li>
+<li>Update the height of the cell</li>
+<li>There is no step 5.</li>
+</ul>
+
+
+<p>I use this technique to build the &ldquo;Answers&rdquo; screen in my Stack Exchange client <a href="http://itunes.apple.com/app/sostacked/id427708024?mt=8">SOStacked</a>.</p>
+
+<p>I&rsquo;m <a href="http://twitter.com/jilouc">@Jilouc on Twitter</a> if you have remarks or suggestions.</p>
+
+<p>&nbsp;</p>
+
+<hr />
+
+<p><a href="#sref1" name="ref1">^^1</a>. <a href="http://jquery.com/">jQuery</a> is included to easily get the height of the document once it&rsquo;s loaded.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Jean-Luc Dagon</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-08-13T11:27:00+02:00" pubdate data-updated="true"></time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://jilouc.github.io/blog/2012/08/13/uiscrollception-embedding-multiple-uiwebviews-in-a-uitableview/" data-via="Jilouc" data-counturl="http://jilouc.github.io/blog/2012/08/13/uiscrollception-embedding-multiple-uiwebviews-in-a-uitableview/" >Tweet</a>
+  
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/10/25/de-la-mise-a-jour-de-tweetbot-pour-ios-7/" title="Next Post: De la mise à jour de Tweetbot pour iOS 7">De la mise à jour de Tweetbot pour iOS 7 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+<!-- 
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/12/07/auto-layout-and-uitableview-cells/">Auto-Layout and UITableView cells</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/28/il-y-a-un-an-je-demissionnais/">Il y a un an, je démissionnais.</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/25/de-la-mise-a-jour-de-tweetbot-pour-ios-7/">De la mise à jour de Tweetbot pour iOS 7</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/08/13/uiscrollception-embedding-multiple-uiwebviews-in-a-uitableview/">UIScrollCeption: embedding multiple UIWebViews in a UITableView</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/jilouc">@jilouc</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'jilouc',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+ &#8211;>
+
+    </div>
+  </div>
+  
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id; js.async = true;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+
+
+</html>

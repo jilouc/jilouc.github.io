@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>http://jilouc.github.io/blog/2013/12/07/auto-layout-and-uitableview-cells/</loc>
+    <lastmod>2013-12-07T13:33:00+01:00</lastmod>
+  </url>
+  <url>
+    <loc>http://jilouc.github.io/blog/2013/10/28/il-y-a-un-an-je-demissionnais/</loc>
+    <lastmod>2013-10-28T00:03:00+01:00</lastmod>
+  </url>
+  <url>
+    <loc>http://jilouc.github.io/blog/2013/10/25/de-la-mise-a-jour-de-tweetbot-pour-ios-7/</loc>
+    <lastmod>2013-10-25T18:05:00+02:00</lastmod>
+  </url>
+  <url>
+    <loc>http://jilouc.github.io/blog/2012/08/13/uiscrollception-embedding-multiple-uiwebviews-in-a-uitableview/</loc>
+    <lastmod>2012-08-13T11:27:00+02:00</lastmod>
+  </url>
+  <url>
+    <loc>http://jilouc.github.io/archives/</loc>
+    <lastmod>2015-02-28T15:02:30+01:00</lastmod>
+  </url>
+  <url>
+    <loc>http://jilouc.github.io/blog/</loc>
+    <lastmod>2015-02-28T15:02:30+01:00</lastmod>
+  </url>
+  <url>
+    <loc>http://jilouc.github.io/</loc>
+    <lastmod>2015-02-28T15:02:30+01:00</lastmod>
+  </url>
+  <url>
+    <loc>http://jilouc.github.io/blog/archives/</loc>
+    <lastmod>2015-02-28T15:02:30+01:00</lastmod>
+  </url>
+  <url>
+    <loc>http://jilouc.github.io/about/</loc>
+    <lastmod>2015-02-28T15:02:30+01:00</lastmod>
+  </url>
+</urlset>
