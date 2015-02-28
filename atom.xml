@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Jean-Luc Dagon]]></title>
-  <link href="http://jilouc.github.io/atom.xml" rel="self"/>
-  <link href="http://jilouc.github.io/"/>
-  <updated>2015-02-28T15:02:30+01:00</updated>
-  <id>http://jilouc.github.io/</id>
+  <link href="http://blog.jldagon.me/atom.xml" rel="self"/>
+  <link href="http://blog.jldagon.me/"/>
+  <updated>2015-02-28T15:22:43+01:00</updated>
+  <id>http://blog.jldagon.me/</id>
   <author>
     <name><![CDATA[Jean-Luc Dagon]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Auto-Layout and UITableView cells]]></title>
-    <link href="http://jilouc.github.io/blog/2013/12/07/auto-layout-and-uitableview-cells/"/>
+    <link href="http://blog.jldagon.me/blog/2013/12/07/auto-layout-and-uitableview-cells/"/>
     <updated>2013-12-07T13:33:00+01:00</updated>
-    <id>http://jilouc.github.io/blog/2013/12/07/auto-layout-and-uitableview-cells</id>
+    <id>http://blog.jldagon.me/blog/2013/12/07/auto-layout-and-uitableview-cells</id>
     <content type="html"><![CDATA[<p><strong>Important note</strong></p>
 
 <p>This post was written before the release of iOS 8. It&rsquo;s now possible to avoid calculating the height, and let the system figure it out by itself.
@@ -46,7 +46,7 @@ I must admit that the improvements they made in Xcode 5 are great, so I decided 
 </ul>
 
 
-<p><img class="center" src="http://jilouc.github.io/images/autolayout-cell-constraints.png" width="706" height="489"></p>
+<p><img class="center" src="http://blog.jldagon.me/images/autolayout-cell-constraints.png" width="706" height="489"></p>
 
 <p>This way, the content view height will fit the label height:</p>
 
@@ -119,8 +119,8 @@ I must admit that the improvements they made in Xcode 5 are great, so I decided 
 
 
 <div style="text-align:center; margin:10px auto;">
-<img src="http://jilouc.github.io/images/autolayout-cells-step2.png" width="320" height="568"> 
-<img src="http://jilouc.github.io/images/autolayout-cells-step3.png" width="320" height="568"> 
+<img src="http://blog.jldagon.me/images/autolayout-cells-step2.png" width="320" height="568"> 
+<img src="http://blog.jldagon.me/images/autolayout-cells-step3.png" width="320" height="568"> 
 </div>
 
 
@@ -155,7 +155,7 @@ I must admit that the improvements they made in Xcode 5 are great, so I decided 
 
 <p>I have not been able to get it to work when the cells have an accessory view. The layout is done as if the content view width is equal to the cell width, but it&rsquo;s not true anymore.</p>
 
-<p><img class="center" src="http://jilouc.github.io/images/autolayout-cells-step4.png" width="320" height="568"></p>
+<p><img class="center" src="http://blog.jldagon.me/images/autolayout-cells-step4.png" width="320" height="568"></p>
 
 <p>One possible work-around for that is to take the accessory view width into account when you set up the constraints.</p>
 
@@ -171,9 +171,9 @@ I must admit that the improvements they made in Xcode 5 are great, so I decided 
   
   <entry>
     <title type="html"><![CDATA[Il y a un an, je démissionnais.]]></title>
-    <link href="http://jilouc.github.io/blog/2013/10/28/il-y-a-un-an-je-demissionnais/"/>
+    <link href="http://blog.jldagon.me/blog/2013/10/28/il-y-a-un-an-je-demissionnais/"/>
     <updated>2013-10-28T00:03:00+01:00</updated>
-    <id>http://jilouc.github.io/blog/2013/10/28/il-y-a-un-an-je-demissionnais</id>
+    <id>http://blog.jldagon.me/blog/2013/10/28/il-y-a-un-an-je-demissionnais</id>
     <content type="html"><![CDATA[<h4>Le déclic</h4>
 
 <p>Il y a un an, jour pour jour, je postais ma lettre de démission. J&#8217;ai choisi de quitter mon CDI pépère dans un grand groupe pour tenter l&#8217;aventure freelance. L&#8217;idée me trottait dans la tête depuis assez longtemps, mais le déclencheur final aura été mon passage à San Francisco pour la WWDC 2012. Ironiquement, c&#8217;est mon employeur qui m&#8217;y avait envoyé (et je l&#8217;en remercie encore !). Difficile en effet de passer 2 semaines plongé dans le monde de la Silicon Valley sans être sensible à l&#8217;esprit qui y règne. J&#8217;ai rencontré des indépendants, des fondateurs de startup, tous passionnés. Même les employés d&#8217;Apple, Google avec qui j&#8217;ai pu parler m&#8217;ont donné cette envie de passer à autre chose…</p>
@@ -253,9 +253,9 @@ Et mes propres idées dans tout ça ? J&#8217;espèrais bien pouvoir régulière
   
   <entry>
     <title type="html"><![CDATA[De la mise à jour de Tweetbot pour iOS 7]]></title>
-    <link href="http://jilouc.github.io/blog/2013/10/25/de-la-mise-a-jour-de-tweetbot-pour-ios-7/"/>
+    <link href="http://blog.jldagon.me/blog/2013/10/25/de-la-mise-a-jour-de-tweetbot-pour-ios-7/"/>
     <updated>2013-10-25T18:05:00+02:00</updated>
-    <id>http://jilouc.github.io/blog/2013/10/25/de-la-mise-a-jour-de-tweetbot-pour-ios-7</id>
+    <id>http://blog.jldagon.me/blog/2013/10/25/de-la-mise-a-jour-de-tweetbot-pour-ios-7</id>
     <content type="html"><![CDATA[<p><a href="https://itunes.apple.com/fr/app/tweetbot-3-for-twitter-iphone/id722294701?mt=8">Tweetbot 3</a> est sorti aujourd&#8217;hui. Tapbots a entièrement revu son célèbre client Twitter pour embrasser à pleine bouche les nouveautés d&#8217;iOS 7. Paul Haddad et Mark Jardine se sont mis au travail dès l&#8217;annonce faite durant la WWDC en juin.</p>
 
 <p>Je ne vais pas faire une review de Tweetbot 3, que je trouve particulièrement réussie. Ils sont parvenus à garder ce qui faisait la spécificité de l&#8217;app tout en s&#8217;adaptant à iOS 7 à merveille. Elle est immédiatement venue remplacer son prédécesseur sur mon iPhone, et il en sera de même pour la future app iPad à sa sortie, je n&#8217;en doute pas.</p>
@@ -295,9 +295,9 @@ Et mes propres idées dans tout ça ? J&#8217;espèrais bien pouvoir régulière
   
   <entry>
     <title type="html"><![CDATA[UIScrollCeption: embedding multiple UIWebViews in a UITableView]]></title>
-    <link href="http://jilouc.github.io/blog/2012/08/13/uiscrollception-embedding-multiple-uiwebviews-in-a-uitableview/"/>
+    <link href="http://blog.jldagon.me/blog/2012/08/13/uiscrollception-embedding-multiple-uiwebviews-in-a-uitableview/"/>
     <updated>2012-08-13T11:27:00+02:00</updated>
-    <id>http://jilouc.github.io/blog/2012/08/13/uiscrollception-embedding-multiple-uiwebviews-in-a-uitableview</id>
+    <id>http://blog.jldagon.me/blog/2012/08/13/uiscrollception-embedding-multiple-uiwebviews-in-a-uitableview</id>
     <content type="html"><![CDATA[<p>You don&rsquo;t have that much choice to display HTML content with basic <code>UIKit</code> components. You&rsquo;re basically limited to <code>UIWebView</code> and… nothing else.</p>
 
 <p>It&rsquo;s a mini Safari, so it does the job very well. But there&rsquo;s WebKit under the hood so it&rsquo;s quite heavy: it has a significant memory trace and takes a while to load.</p>
